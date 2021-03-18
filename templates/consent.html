@@ -1,0 +1,60 @@
+{% extends "layout.html" %}
+{% block content %}
+    <div class="content-section">
+        <form method="POST" action="">
+            {{ form.hidden_tag() }}
+            <fieldset class="form-group">
+                <legend class="border-bottom mb-4">Consent Management Application.</legend>
+                <div class="form-group">
+                    {{ form.consent0.label(class="form-control-label") }}
+		    {{ form.consent0(class="form-control form-control-lg") }}
+                    
+		    {{ form.consent1.label(class="form-control-label") }}
+		    {{ form.consent1(class="form-control form-control-lg") }}
+                    
+		    {{ form.consent2.label(class="form-control-label") }}
+		    {{ form.consent2(class="form-control form-control-lg") }}
+                    
+		    {{ form.consent3.label(class="form-control-label") }}
+		    {{ form.consent3(class="form-control form-control-lg") }}
+                    
+		    {{ form.consent4.label(class="form-control-label") }}
+		    {{ form.consent4(class="form-control form-control-lg") }}
+                    
+		    {{ form.consent5.label(class="form-control-label") }}
+		    {{ form.consent5(class="form-control form-control-lg") }}
+                    
+		    {{ form.consent6.label(class="form-control-label") }}
+		    {{ form.consent6(class="form-control form-control-lg") }}
+                    
+		    {{ form.consent7.label(class="form-control-label") }}
+		    {{ form.consent7(class="form-control form-control-lg") }}
+                    
+		    {{ form.consent8.label(class="form-control-label") }}
+		    {{ form.consent8(class="form-control form-control-lg") }}
+                    
+		    {{ form.consent9.label(class="form-control-label") }}
+		    {{ form.consent9(class="form-control form-control-lg") }}
+                    
+		    {{ form.consent10.label(class="form-control-label") }}
+		    {{ form.consent10(class="form-control form-control-lg") }}
+                    
+		    {{ form.consent11.label(class="form-control-label") }}
+		    {{ form.consent11(class="form-control form-control-lg") }}
+                    
+		    {{ form.consent12.label(class="form-control-label") }}
+		    {{ form.consent12(class="form-control form-control-lg") }}
+                    
+		    {{ form.consent13.label(class="form-control-label") }}
+		    {{ form.consent13(class="form-control form-control-lg") }}
+                    
+		    {{ form.consent14.label(class="form-control-label") }}
+		    {{ form.consent14(class="form-control form-control-lg") }}
+                </div>
+            </fieldset>
+            <div class="form-group">
+                {{ form.submit(class="btn btn-outline-info") }}
+            </div>
+        </form>
+    </div>
+{% endblock content %}

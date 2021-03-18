@@ -1,0 +1,11 @@
+Flask==1.1.2
+wtforms
+flask-wtf
+google-api-python-client
+google-auth-httplib2
+google-auth
+google-cloud
+google-cloud-storage
+email_validator
+gunicorn==20.0.4; python_version > '3.0'
+gunicorn==19.10.0; python_version < '3.0'

@@ -1,0 +1,15 @@
+    fdata = ConsentForm()
+    
+    fdata.consent0.data = "Yes"
+    fdata.consent1.data = "No"
+    fdata.consent2.data = "Yes"
+    fdata.consent3.data = "Yes"
+    fdata.consent4.data = "No"
+    fdata.consent5.data = "Yes"
+    fdata.consent6.data = "Yes"
+    fdata.consent7.data = "Yes"
+    fdata.consent8.data = "Yes"
+    fdata.consent9.data = "No"
+    fdata.consent10.data = "Yes"
+    fdata.consent11.data = "Yes"
+    fdata.consent12.data = "Yes"

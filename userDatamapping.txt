@@ -1,0 +1,12 @@
+curl -X POST \
+    -H "Authorization: Bearer $(gcloud auth application-default print-access-token)" \
+    -H "Content-Type: application/consent+json; charset=utf-8" \
+    --data "{
+       'user_id': 'USER_ID',
+       'data_id' : 'DATA_ID',
+       'resource_attributes': [{
+           'attribute_definition_id': 'data_identifiable',
+           'values': ['de-identified']
+      }]
+    }" \
+"https://healthcare.googleapis.com/v1beta1/projects/PROJECT_ID/locations/LOCATION/datasets/DATASET_ID/consentStores/CONSENT_STORE_ID/userDataMappings"

@@ -1,0 +1,14 @@
+runtime: python
+env: flex
+service: consentapi
+entrypoint: gunicorn -b :$PORT main:app
+
+runtime_config:
+  python_version: 3
+
+env_variables:
+    BASE_URL: 'https://healthcare.googleapis.com/v1'
+    PROJECT_ID: 'smede-276406'
+    REGION: us-central1
+    DATASET_ID: demoset 
+    FHIR_STORE_ID: 
