@@ -48,6 +48,7 @@ def login():
     if form.validate_on_submit():
         flash(f'Welcome back  {form.email.data} !', 'success')
         useremail = form.email.data
+        session['user'] = useremail
         return redirect(url_for('consent'))
     return render_template('login.html', title='Login', form=form)
 
@@ -178,7 +179,7 @@ def consent():
             userconsentdata["identifiable"]["coaching"] = False
 
         print(userconsentdata)
-        updateConsentData(useremail, userconsentdata)
+        updateConsentData(session['user'], userconsentdata)
 
         return(textToDisplay)
 #        return redirect(url_for('consentAck'))
@@ -295,7 +296,7 @@ def get_session():
     from google.oauth2 import service_account
 
     SCOPES = ['https://www.googleapis.com/auth/cloud-platform']
-    SERVICE_ACCOUNT_FILE = "/Users/rkharwar/sandbox/uhg/consentapi/smede-276406-6a0a4bbaf412.json"
+    SERVICE_ACCOUNT_FILE = "/Users/rkharwar/sandbox/uhg/smede-276406-764778147a0d.json"
 
     credentials = service_account.Credentials.from_service_account_file(
         SERVICE_ACCOUNT_FILE, scopes=SCOPES)
@@ -306,7 +307,6 @@ def get_session():
         PROJECT_ID, LOCATION, DATASET,CONSENTSTORE
     )
     return service, consent_parent
-
 
 def setup_consentservice():
    global svc
@@ -356,14 +356,13 @@ request_attr = {
 
 import json
 #@app.route("/")
-#def updateConsentData():
 def updateConsentData(useremail, userconsentdata):
 
     # Make an authenticated API request
     # #headers = {"Content-Type": "application/consent+json;charset=utf-8"}
 
     print("Creating Consent Artifact")
-    useremail = "test_user_1"
+    #useremail = "test_user_1"
 
     #Create consent artifact payload
     data = {}
@@ -392,83 +391,135 @@ def updateConsentData(useremail, userconsentdata):
     print("------------------------")
 
     print("Create Consent  for patient data type {}".format(useremail))
-    #### Consent for patient data type
-    print("creating consents")
-    print(userconsentdata)
+    print("Creating consents - userdata mapping as well as the consent itself")
+    print("User {}, consent data is {}".format(useremail,userconsentdata))
+    # Check if the user exists in the system. If the user exists in the system, then leave the data mappings in tact but
+    # update the consent artifact and consent itself
+    print("Checking if the user exists in the system")
+    filtertext = "user_id="+"\"" + session["user"]+ "\""
+    # filtertext = "user_id="+"\"test_user_100\""
 
 
-    for a in ["activity", "vitals", "mentalhealth", "medicalrecord"]:
+    print(filtertext)
+    request = svc.projects().locations().datasets().consentStores().consents().list(parent=consent_parent,filter=filtertext)    #, )
+    response = request.execute()
 
 
-        # Create the userDataMapping 
-        # Use opaque id and expect another application to take care of transalting the opaqueid to physical resource location
-        # the format of the opaque id is "useremail,"noun(activity/Vitals),physresource(bq/csv/fhir),id(table/csv
-        # Create the payload
-        # Create 2 version per data type
-        ## Deidentified Data ID
+    if (len(response) == 0): # This is a new user.
+        print("New User ")
+
+        # userDataMapping
+        for a in ["activity", "vitals", "mentalhealth", "medicalrecord"]:
+
+            # Create the userDataMapping
+            # Use opaque id and expect another application to take care of transalting the opaqueid to physical resource location
+            # the format of the opaque id is "useremail,"noun(activity/Vitals),physresource(bq/csv/fhir),id(table/csv
+            # Create the payload
+            # Create 2 version per data type
+            ## Deidentified Data ID
+            data = {}
+            attr = {}
+            data["user_id"] = useremail
+            data["data_id"] = useremail +  "," + a + "," + "deid"
+            data["resource_attributes"] = []
+            attr["attribute_definition_id"] = "data_identifiable"
+            attr["values"] = ["de-identified"]
+            data["resource_attributes"].append(attr)
+            print("Creating user data mapping for datatype {} and de-id".format(a))
+            print(json.dumps(data, indent=4))
+            request = svc.projects().locations().datasets().consentStores().userDataMappings().create(
+                parent=consent_parent,body=data)
+
+            response = request.execute()
+            print(json.dumps(
+              response,
+              sort_keys=True,
+              indent=2
+            ))
+
+
+            ## Identifiable Data ID
+            data = {}
+            attr = {}
+            data["user_id"] = useremail
+            data["data_id"] = useremail +  "," + a + "," + "id"
+            data["resource_attributes"] = []
+            attr["attribute_definition_id"] = "data_identifiable"
+            attr["values"] = ["identifiable"]
+            data["resource_attributes"].append(attr)
+            print("Creating user data mapping for datatype {} and id".format(a))
+            print(json.dumps(data, indent=4))
+            request = svc.projects().locations().datasets().consentStores().userDataMappings().create(
+                parent=consent_parent,body=data)
+
+            response = request.execute()
+            print(json.dumps(
+              response,
+              sort_keys=True,
+              indent=2
+            ))
+    else:   # Existing user
+        #Consent Creating
+        print("Existing User ")
+
+        for a in ["activity", "vitals", "mentalhealth", "medicalrecord"]:
+
+            data = {}
+            activityBy = []
+            for b in ["provider", "healthplan", "partners"]:
+                if userconsentdata[a][b] == True:
+                    activityBy.append(b)
+
+            data["user_id"] = useremail
+            data["policies"] = []
+            obj0 = {}
+            obj0["resource_attributes"] = []
+            obj = {}
+            obj["attribute_definition_id"] = "data_type"
+            obj["values"] = []
+            obj["values"].append(a)
+            obj0["resource_attributes"].append(obj)
+            obj0["authorization_rule"] = {}
+            obj0["authorization_rule"]["expression"] = "requester_type in {}".format(str(activityBy))
+            data["policies"].append(obj0)
+
+            data["consent_artifact"]= artifact
+
+            print(json.dumps(data, indent=4))
+            request = svc.projects().locations().datasets().consentStores().consents().create(
+                parent=consent_parent,body=data)
+
+            response = request.execute()
+            print(json.dumps(
+              response,
+              sort_keys=True,
+              indent=2
+            ))
+            print("------------------------")
+
+        print("Create Consent  for idenitifable  data  {}".format(useremail))
+
         data = {}
-        attr = {}
-        data["user_id"] = useremail
-        data["data_id"] = useremail +  "," + a + "," + "deid"
-        data["resource_attributes"] = []
-        attr["attribute_definition_id"] = "data_identifiable"
-        attr["values"] = ["de-identified"]
-        data["resource_attributes"].append(attr)
-        print("Creating user data mapping for datatype {} and de-id".format(a))
-        print(json.dumps(data, indent=4))
-        request = svc.projects().locations().datasets().consentStores().userDataMappings().create(
-            parent=consent_parent,body=data)
-
-        response = request.execute()
-        print(json.dumps(
-          response,
-          sort_keys=True,
-          indent=2
-        ))
-
-
-        ## Identifiable Data ID
-        data = {}
-        attr = {}
-        data["user_id"] = useremail
-        data["data_id"] = useremail +  "," + a + "," + "id"
-        data["resource_attributes"] = []
-        attr["attribute_definition_id"] = "data_identifiable"
-        attr["values"] = ["identifiable"]
-        data["resource_attributes"].append(attr)
-        print("Creating user data mapping for datatype {} and id".format(a))
-        print(json.dumps(data, indent=4))
-        request = svc.projects().locations().datasets().consentStores().userDataMappings().create(
-            parent=consent_parent,body=data)
-
-        response = request.execute()
-        print(json.dumps(
-          response,
-          sort_keys=True,
-          indent=2
-        ))
-
-
-        data = {}
-        activityBy = []
-        for b in ["provider", "healthplan", "partners"]:
-            if userconsentdata[a][b] == True:
-                activityBy.append(b)
-
-        data["user_id"] = useremail
-        data["policies"] = []
+        #Create the payload
+        accessBy = []
+        if (userconsentdata["identifiable"]["discount"] == True):
+            accessBy.append("discount")
+        if (userconsentdata["identifiable"]["coaching"] == True):
+            accessBy.append("coaching")
+        data['user_id'] = useremail
+        data['policies'] = []
         obj0 = {}
-        obj0["resource_attributes"] = []
+        obj0['resource_attributes'] = []
         obj = {}
-        obj["attribute_definition_id"] = "data_type"
-        obj["values"] = []
-        obj["values"].append(a)
-        obj0["resource_attributes"].append(obj)
-        obj0["authorization_rule"] = {}
-        obj0["authorization_rule"]["expression"] = "requester_type in {}".format(str(activityBy))
-        data["policies"].append(obj0)
+        obj['attribute_definition_id'] = 'data_identifiable'
+        obj['values'] = []
+        obj['values'].append('identifiable')
+        obj0['resource_attributes'].append(obj)
+        obj0['authorization_rule'] = {}
+        obj0['authorization_rule']['expression'] = 'requester_identity in {}'.format(str(accessBy))
+        data['policies'].append(obj0)
 
-        data["consent_artifact"]= artifact
+        data['consent_artifact']= artifact
 
         print(json.dumps(data, indent=4))
         request = svc.projects().locations().datasets().consentStores().consents().create(
@@ -482,91 +533,50 @@ def updateConsentData(useremail, userconsentdata):
         ))
         print("------------------------")
 
-    print("Create Consent  for idenitifable  data  {}".format(useremail))
+        print("Create Consent  for de-identified  data  {}".format(useremail))
 
-    data = {}
-    #Create the payload
-    accessBy = []
-    if (userconsentdata["identifiable"]["discount"] == True):
-        accessBy.append("discount")
-    if (userconsentdata["identifiable"]["coaching"] == True):
-        accessBy.append("coaching")
-    data['user_id'] = useremail
-    data['policies'] = []
-    obj0 = {}
-    obj0['resource_attributes'] = []
-    obj = {}
-    obj['attribute_definition_id'] = 'data_identifiable'
-    obj['values'] = []
-    obj['values'].append('identifiable')
-    obj0['resource_attributes'].append(obj)
-    obj0['authorization_rule'] = {}
-    obj0['authorization_rule']['expression'] = 'requester_identity in {}'.format(str(accessBy))
-    data['policies'].append(obj0)
+        data = {}
+        #Create the payload
+        accessBy = []
+        if (userconsentdata["de-identified"]["research"] == True):
+            accessBy.append("research")
 
-    data['consent_artifact']= artifact
+        data['user_id'] = useremail
+        data['policies'] = []
+        obj0 = {}
+        obj0['resource_attributes'] = []
+        obj = {}
+        obj['attribute_definition_id'] = 'data_identifiable'
+        obj['values'] = []
+        obj['values'].append('de-identified')
+        obj0['resource_attributes'].append(obj)
+        obj0['authorization_rule'] = {}
+        obj0['authorization_rule']['expression'] = 'requester_identity in {}'.format(str(accessBy))
+        data['policies'].append(obj0)
 
-    print(json.dumps(data, indent=4))
-    request = svc.projects().locations().datasets().consentStores().consents().create(
-        parent=consent_parent,body=data)
+        data['consent_artifact']= artifact
 
-    response = request.execute()
-    print(json.dumps(
-      response,
-      sort_keys=True,
-      indent=2
-    ))
-    print("------------------------")
+        print(json.dumps(data, indent=4))
+        request = svc.projects().locations().datasets().consentStores().consents().create(
+            parent=consent_parent,body=data)
 
+        response = request.execute()
+        print(json.dumps(
+          response,
+          sort_keys=True,
+          indent=2
+        ))
+        print("------------------------")
+       # Lets do the data mapping now
 
-    print("Create Consent  for de-identified  data  {}".format(useremail))
-
-    data = {}
-    #Create the payload
-    accessBy = []
-    if (userconsentdata["de-identified"]["research"] == True):
-        accessBy.append("research")
-
-    data['user_id'] = useremail
-    data['policies'] = []
-    obj0 = {}
-    obj0['resource_attributes'] = []
-    obj = {}
-    obj['attribute_definition_id'] = 'data_identifiable'
-    obj['values'] = []
-    obj['values'].append('de-identified')
-    obj0['resource_attributes'].append(obj)
-    obj0['authorization_rule'] = {}
-    obj0['authorization_rule']['expression'] = 'requester_identity in {}'.format(str(accessBy))
-    data['policies'].append(obj0)
-
-    data['consent_artifact']= artifact
-
-    print(json.dumps(data, indent=4))
-    request = svc.projects().locations().datasets().consentStores().consents().create(
-        parent=consent_parent,body=data)
-
-    response = request.execute()
-    print(json.dumps(
-      response,
-      sort_keys=True,
-      indent=2
-    ))
-    print("------------------------")
-   # Lets do the data mapping now
-
-    # Write the consent policy into the consent store
-    app.logger.info("url is :{}".format(resource_path))
-    print("------------------------")
-
-   # app.logger.info(json.dumps(response, indent=2))
-    
+        # Write the consent policy into the consent store
+        #app.logger.info("url is :{}".format(resource_path))
+        print("------------------------")
     return  
 
 
 
 if __name__ == '__main__':
-   # updateConsentData()
     setup_consentservice()
     list_consentAttributes()
     list_consents()
