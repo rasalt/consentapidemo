@@ -6,6 +6,7 @@ google-auth-httplib2
 google-auth
 google-cloud
 google-cloud-storage
+google-cloud-firestore
 email_validator
 gunicorn==20.0.4; python_version > '3.0'
 gunicorn==19.10.0; python_version < '3.0'

@@ -30,7 +30,6 @@ h1, h2, h3, h4, h5, h6 {
   border: 4px solid #0F9D58;
   border-radius: 3px;
   margin-bottom: 2px;
-  height: 40%;
 
 }
 .content-section-side {
@@ -46,7 +45,6 @@ h1, h2, h3, h4, h5, h6 {
   border: 4px solid #F4B400;
   border-radius: 3px;
   bottom: 10%;
-  position: fixed;
   height: 40%;
   width: 60%
 }

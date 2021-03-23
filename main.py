@@ -196,6 +196,7 @@ def datarequestAll():
         textToDisplay = "Request for data by a " + form.who.data + ". For the purpose of " + form.whatid.data + ". Requesting Organization is " + form.requestingName.data + "<br/>"+ "<br/>"+ "<br/> "
 
         # Lets get all the data that this user can access
+        mappingarray = []
         data = {}
 
         data['gcs_destination'] = {}
@@ -221,9 +222,8 @@ def datarequestAll():
         print (response)
         print ("------------------------------------------")
         # Read the destination output file
-        str = readGcsFile()
-        textToDisplay = textToDisplay + str
-        return(textToDisplay)
+        mappingarray = getMapping()
+        return(mappingarray)
 #        return redirect(url_for('consentAck'))
     return render_template('datarequestAll.html', title='datarequest', form=form)
 
@@ -249,25 +249,54 @@ def download_blob(bucket_name, source_blob_name, destination_file_name):
           source_blob_name, destination_file_name)
       )
 
-def readGcsFile():
-    #from google.cloud import storage
-    download_blob("smede-sandbox", "query-accessible-data-result-3509152905317842945.txt", "consentdata.txt")
-    # Cycle through the contents of the consent data.
+def getMapping():
+    from google.cloud import storage
+
+    # Read GCS file
+    storage_client = storage.Client.from_service_account_json("/Users/rkharwar/sandbox/uhg/smede-276406-764778147a0d.json")
+
+    # get bucket with name
+    bucket = storage_client.get_bucket('smede-sandbox')
+    # get bucket data as blob
+    blob = bucket.get_blob("consent/query-accessible-data-result-3509152905317842945.txt")
+    # convert to string
+    blob.download_to_filename('consentdata.txt')
 
     file1 = open('consentdata.txt', 'r')
     lines = file1.readlines()
     file1.close()
 
-    count = 0
-    returnStr = "\n"
+    # Read firestore
+    from google.cloud import firestore
+    db = firestore.Client.from_service_account_json("/Users/rkharwar/sandbox/uhg/smede-276406-764778147a0d.json")
 
+    count = 0
+    mappinginfo = []
+    print(lines)
     # Strips the newline character
+    data = {}
     for line in lines:
         count += 1
-        print("Line{}: {}".format(count, line.strip()))
-        returnStr = returnStr + line + "\n"
+        logicalid = line.strip()
+        data['logicalid'] = logicalid
+        print("getMapping, logicalid is {}".format(logicalid))
+        dataphys = {}
+        doc_ref = db.collection(u'consentdatamapping').document(logicalid)
+        doc = doc_ref.get()
+        if doc.exists:
+            print(f'Document data: {doc.to_dict()}')
+        else:
+            print(u'No such document!')
+        data['physicalmapping'] =   {doc.to_dict()}
+
+        mappinginfo.append(data)
 
 
+    print(mappinginfo)
+
+    return mappinginfo
+
+    print("Line{}: {}".format(count, line.strip()))
 #url     = 'http://example.tld'
 #payload = { 'key' : 'val' }
 #headers = {}
@@ -354,6 +383,63 @@ request_attr = {
     "purpose": ["coaching", "research", "discount"]
 }
 
+def createDataMapping(logicalid):
+    from google.cloud import firestore
+    import random
+    print("logical id is {}".format(logicalid))
+    resource="gs://"
+    comment="this is crazy"
+    # Add a new document
+    db = firestore.Client.from_service_account_json("/Users/rkharwar/sandbox/uhg/smede-276406-764778147a0d.json")
+    id = random.randint(1,10000)
+    if ("activity" in logicalid):
+        if (",id" in logicalid):
+            resource = "bt.activitydata"
+            comment = "Identifiable Activity data in BigTable"
+        else:
+            resource = "btdeid.activitydata"
+            comment = "De-Identifiable Activity data in BigTable"
+
+    if ("vitals" in logicalid):
+        if (",id" in logicalid):
+            resource = "bt.vitalsdata"
+            comment = "Identifiable Vitals data in BigTable"
+        else:
+            resource = "btdeid.vitalsdata"
+            comment = "De-Identifiable Vitals data in BigTable"
+
+    if ("medicalrecord" in logicalid):
+        if (",id" in logicalid):
+            resource = "BASE_URL/projects/demo/us-central1/datasets/demodataset/fhirStores/FHIRR4/Patient"
+            comment = "Identifiable claims data in FHIR Store"
+        else:
+            resource = "BASE_URL/projects/demo/us-central1/datasets/deiddemodataset/fhirStores/FHIRR4/Patient"
+            comment = "De-Identifiable claims data in FHIR Store"
+
+    if ("mentalhealth" in logicalid):
+        if (",id" in logicalid):
+            resource = "PROJECT_ID.bigquerymentalhealth"
+            comment = "Identifiable mental health data in BigQuery"
+        else:
+            resource = "PROJECT_ID.deidbigquerymentalhealth"
+            comment = "De-Identifiable mental health data in BigQuery"
+
+    data = {}
+
+    data['resource'] = resource
+    data['id'] = id
+    data['comment'] = comment
+    #activity data in BigTable
+    #claims data in FHIR store
+    #mentalhealth in BQ
+    #vitals in BigTable
+
+
+    # Add a new doc in collection 'cities' with ID 'LA'
+    db.collection(u'consentdatamapping').document(logicalid).set(data)
+
+
+
 import json
 #@app.route("/")
 def updateConsentData(useremail, userconsentdata):
@@ -436,7 +522,7 @@ def updateConsentData(useremail, userconsentdata):
               sort_keys=True,
               indent=2
             ))
-
+            createDataMapping(data["data_id"])
 
             ## Identifiable Data ID
             data = {}
@@ -458,6 +544,8 @@ def updateConsentData(useremail, userconsentdata):
               sort_keys=True,
               indent=2
             ))
+            createDataMapping(data["data_id"])
+
     else:   # Existing user
         #Consent Creating
         print("Existing User ")
