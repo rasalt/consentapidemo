@@ -47,7 +47,7 @@ consentList = [
    ]
 
 class ConsentForm(FlaskForm):
-    choices = ['No','Yes']
+    choices = ['Yes','No']
     consent0 = SelectField(consentList[0],choices=choices)
     consent1 = SelectField(consentList[1],choices=choices)
     consent2 = SelectField(consentList[2],choices=choices)

@@ -15,17 +15,15 @@
 
 		    {{ form.who.label(class="form-control-label") }}
 		    {{ form.who(class="form-control form-control-lg") }}
-                    
+
 		    {{ form.purpose.label(class="form-control-label") }}
 		    {{ form.purpose(class="form-control form-control-lg") }}
-                    
+
 		    {{ form.requestingName.label(class="form-control-label") }}
 		    {{ form.requestingName(class="form-control form-control-lg") }}
                 </div>
             </fieldset>
-            <div class="form-group">
-                {{ form.submit(class="btn btn-outline-info") }}
-            </div>
+            {{ form.submit(class="btn btn-outline-info") }}
         </form>
     </div>
 {% endblock content %}

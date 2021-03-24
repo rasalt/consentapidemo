@@ -1,0 +1,31 @@
+{% extends "layout_policy.html" %}
+{% block content %}
+    <div class="content-section">
+            <fieldset class="form-group">
+                <legend class="border-bottom mb-4">Policy Enforcement Application - Requested Data Elements</legend>
+                <ul>
+                <table border=2>
+                  <tr>
+                    <td>
+                      <h3>LogicalID</h3>
+                    </td>
+                    <td>
+                      <h3>PhysicalID</h3>
+                    </td>
+                  </tr>
+                  {% for dictionary in data %}
+                      <tr>
+                        <td>
+                          <h5>{{ dictionary['logicalid'] }}</h5>
+                        </td>
+                        <td>
+                          <h5>{{ dictionary['physicalmapping'] }}</h5>
+                        </td>
+                      </tr>
+                  {% endfor %}
+                </table>
+
+                </ul>
+            </fieldset>
+    </div>
+{% endblock content %}

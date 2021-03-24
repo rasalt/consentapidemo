@@ -185,14 +185,15 @@ def consent():
 #        return redirect(url_for('consentAck'))
     return render_template('consent.html', title='consent', form=form)
 
-
 @app.route("/datarequestAll", methods=['GET','POST'])
 def datarequestAll():
 
     form = DataRequestForm()
-
+    print("fsfndfsk")
     if (flask.request.method =='POST'):
         print("POST")
+        print("45464")
+
         textToDisplay = "Request for data by a " + form.who.data + ". For the purpose of " + form.whatid.data + ". Requesting Organization is " + form.requestingName.data + "<br/>"+ "<br/>"+ "<br/> "
 
         # Lets get all the data that this user can access
@@ -200,8 +201,9 @@ def datarequestAll():
         data = {}
 
         data['gcs_destination'] = {}
-        data['gcs_destination']['uri_prefix'] = 'gs://smede-sandbox/consent/'
+        data['gcs_destination']['uri_prefix'] = 'gs://smede-sandbox/consent/xyz'
         data['resource_attributes'] = {}
+
         if (form.whatid.data != "any"):
             data['resource_attributes']['data_identifiable'] = form.whatid.data
         if (form.whattype.data != "any"):
@@ -222,9 +224,15 @@ def datarequestAll():
         print (response)
         print ("------------------------------------------")
         # Read the destination output file
-        mappingarray = getMapping()
-        return(mappingarray)
-#        return redirect(url_for('consentAck'))
+        session['mappingarray'] = getMapping()
+        print(session)
+        print("REDIRECTING NOW")
+        #return(mappingarray)
+      #  return redirect(url_for('resultall'))
+        print(session['mappingarray'])
+        #session["mappingarray"]= [{"value": "A", "phys": "PHYS"}, {"value": "B", "phys": "PHYS"}]
+        return render_template('dataresult.html', data=session['mappingarray'])
+    #        return redirect(url_for('consentAck'))
     return render_template('datarequestAll.html', title='datarequest', form=form)
 
 
@@ -258,7 +266,7 @@ def getMapping():
     # get bucket with name
     bucket = storage_client.get_bucket('smede-sandbox')
     # get bucket data as blob
-    blob = bucket.get_blob("consent/query-accessible-data-result-3509152905317842945.txt")
+    blob = bucket.get_blob("consent/xyz/consent_xyz_query-accessible-data-result-11744410558303043585.txt")
     # convert to string
     blob.download_to_filename('consentdata.txt')
 
@@ -287,7 +295,8 @@ def getMapping():
             print(f'Document data: {doc.to_dict()}')
         else:
             print(u'No such document!')
-        data['physicalmapping'] =   {doc.to_dict()}
+        data['physicalmapping'] =   doc.to_dict()
+        data['physicalmapping'] =   json.dumps(data['physicalmapping'])
 
         mappinginfo.append(data)
 
@@ -511,7 +520,7 @@ def updateConsentData(useremail, userconsentdata):
             attr["attribute_definition_id"] = "data_identifiable"
             attr["values"] = ["de-identified"]
             data["resource_attributes"].append(attr)
-            print("Creating user data mapping for datatype {} and de-id".format(a))
+            print("Creating user data mapping for user {} datatype {} and de-id".format(useremail,a))
             print(json.dumps(data, indent=4))
             request = svc.projects().locations().datasets().consentStores().userDataMappings().create(
                 parent=consent_parent,body=data)
@@ -546,44 +555,44 @@ def updateConsentData(useremail, userconsentdata):
             ))
             createDataMapping(data["data_id"])
 
-    else:   # Existing user
-        #Consent Creating
-        print("Existing User ")
+    # Existing user
+    #Consent Creating
+    print("Existing User ")
 
-        for a in ["activity", "vitals", "mentalhealth", "medicalrecord"]:
+    for a in ["activity", "vitals", "mentalhealth", "medicalrecord"]:
 
-            data = {}
-            activityBy = []
-            for b in ["provider", "healthplan", "partners"]:
-                if userconsentdata[a][b] == True:
-                    activityBy.append(b)
+        data = {}
+        activityBy = []
+        for b in ["provider", "healthplan", "partners"]:
+            if userconsentdata[a][b] == True:
+                activityBy.append(b)
 
-            data["user_id"] = useremail
-            data["policies"] = []
-            obj0 = {}
-            obj0["resource_attributes"] = []
-            obj = {}
-            obj["attribute_definition_id"] = "data_type"
-            obj["values"] = []
-            obj["values"].append(a)
-            obj0["resource_attributes"].append(obj)
-            obj0["authorization_rule"] = {}
-            obj0["authorization_rule"]["expression"] = "requester_type in {}".format(str(activityBy))
-            data["policies"].append(obj0)
+        data["user_id"] = useremail
+        data["policies"] = []
+        obj0 = {}
+        obj0["resource_attributes"] = []
+        obj = {}
+        obj["attribute_definition_id"] = "data_type"
+        obj["values"] = []
+        obj["values"].append(a)
+        obj0["resource_attributes"].append(obj)
+        obj0["authorization_rule"] = {}
+        obj0["authorization_rule"]["expression"] = "requester_type in {}".format(str(activityBy))
+        data["policies"].append(obj0)
 
-            data["consent_artifact"]= artifact
+        data["consent_artifact"]= artifact
 
-            print(json.dumps(data, indent=4))
-            request = svc.projects().locations().datasets().consentStores().consents().create(
-                parent=consent_parent,body=data)
+        print(json.dumps(data, indent=4))
+        request = svc.projects().locations().datasets().consentStores().consents().create(
+            parent=consent_parent,body=data)
 
-            response = request.execute()
-            print(json.dumps(
-              response,
-              sort_keys=True,
-              indent=2
-            ))
-            print("------------------------")
+        response = request.execute()
+        print(json.dumps(
+          response,
+          sort_keys=True,
+          indent=2
+         ))
+        print("------------------------")
 
         print("Create Consent  for idenitifable  data  {}".format(useremail))
 
@@ -654,11 +663,6 @@ def updateConsentData(useremail, userconsentdata):
           sort_keys=True,
           indent=2
         ))
-        print("------------------------")
-       # Lets do the data mapping now
-
-        # Write the consent policy into the consent store
-        #app.logger.info("url is :{}".format(resource_path))
         print("------------------------")
     return  
 
