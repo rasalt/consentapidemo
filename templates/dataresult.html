@@ -2,15 +2,18 @@
 {% block content %}
     <div class="content-section">
             <fieldset class="form-group">
-                <legend class="border-bottom mb-4">Policy Enforcement Application - Requested Data Elements</legend>
-                <ul>
+                <legend class="border-bottom mb-4"><h2>Third Party (External/Internal) Facing App</h2></legend>
+                <ul><h5>This is not part of the consent API but it is representative of a way the policy enforcement
+                can be done by mapping opaque ids that are part of the consent API to physical resources in the
+                data owner's environment<br><br> The "LogicalID" represents the opaque id. <br> The "PhysicalID"
+                represents the mapping managed by the data owner. <br></h5> <br>
                 <table border=2>
                   <tr>
                     <td>
-                      <h3>LogicalID</h3>
+                      <h4>LogicalID</h4>
                     </td>
                     <td>
-                      <h3>PhysicalID</h3>
+                      <h4>PhysicalID</h4>
                     </td>
                   </tr>
                   {% for dictionary in data %}
