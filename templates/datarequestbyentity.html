@@ -1,0 +1,41 @@
+{% extends "layout_policy.html" %}
+{% block content %}
+    <div class="content-section">
+        <form method="POST" action="">
+            {{ form.hidden_tag() }}
+            <fieldset class="form-group">
+                <legend class="border-bottom mb-4"><h2>Third Party (External/Internal) Facing App</h2></legend>
+                <div class="form-group"><h4>Policy Enforcement</h4> <br>
+
+
+   		    {{ form.whattype.label(class="form-control-label") }}
+		    {{ form.whattype(class="form-control form-control-lg") }}
+
+		    {{ form.who.label(class="form-control-label") }}
+		    {{ form.who(class="form-control form-control-lg") }}
+
+
+		    {{ form.requestingName.label(class="form-control-label") }}
+		    {{ form.requestingName(class="form-control form-control-lg") }}
+                </div>
+            </fieldset>
+            {{ form.submit(class="btn btn-outline-info") }}
+        </form>
+    </div>
+{% endblock content %}
+{% block bottom %}
+<div class="form-group"><h5>
+    1. Requesting entity makes a request with the attributes specified. <br>
+	2. Once the request is submiied the following things happen <br>
+	<h6>
+		2.1 Using the request attributes, a query is formulated by the policy enforcement app <br>
+		2.2 The consent store is queried for what patient data consent selections match the query <br>
+		2.3 In this demo implementation, additional mapping is created between the LogicalID for the data to the
+        physical location of the data. <br>
+		2.4 Envision the policy enforcement app then pulling these various pieces of information and sending it to the requester in a secure fashion
+        <br>
+	</h6>
+</h5>
+
+</div>
+{% endblock bottom %}

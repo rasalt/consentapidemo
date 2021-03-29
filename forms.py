@@ -66,22 +66,28 @@ class ConsentForm(FlaskForm):
 
     submit = SubmitField('Submit')
 
-
-class DataRequestForm(FlaskForm):
+class DataRequestByEntityForm(FlaskForm):
 
     choices_who = ["provider", "healthplan", "partners", "any"]
-    choices_purpose = ["coaching", "research", "discount", "any"]
-    choices_whatid = ["identifiable", "de-identified", "any"]
     choices_whattype = ["activity", "vitals", "mentalhealth", "medicalrecord", "any"]
 
     who = SelectField("Are you a provider (eg. a Dr or a Hospital) or a Healthplan (eg. a Aetna or BCBS etc) or a Third Party (eg. a Research Institute etc.)",choices=choices_who)
-    purpose = SelectField("what is the purpose of the data access?",choices=choices_purpose)
 
     whattype = SelectField("What data type do you want to access?",choices=choices_whattype)
-    whatid = SelectField("Is the data identifiable or de-identified?",choices=choices_whatid)
     requestingName = StringField('Requesting Organization name')
 
 
     submit = SubmitField('Submit')
 
+class DataRequestByPurposeForm(FlaskForm):
 
+    choices_purpose = ["coaching", "research", "discount", "any"]
+    choices_whatid = ["identifiable", "de-identified", "any"]
+
+    purpose = SelectField("what is the purpose of the data access?",choices=choices_purpose)
+
+    whatid = SelectField("Is the data identifiable or de-identified?",choices=choices_whatid)
+    requestingName = StringField('Requesting Organization name')
+
+
+    submit = SubmitField('Submit')

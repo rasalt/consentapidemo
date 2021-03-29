@@ -13,7 +13,7 @@
 </head>
 <body>
     <header class="site-header">
-      <nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top">
+      <nav class="navbar navbar-expand-md navbar-dark bg-primary fixed-top">
         <div class="container">
           <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarToggle" aria-controls="navbarToggle" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
@@ -37,28 +37,15 @@
         <div class="col-md-8">
           {% block content %}{% endblock %}
         </div>
-        <div class="col-md-4">
-          <div class="content-section-side">
-            <h3>Sidebar</h3>
-            <p class='text-muted'>
-              <ul class="list-group">
-                <li class="list-group-item list-group-item-light">Latest Posts</li>
-                <li class="list-group-item list-group-item-light">Announcements</li>
-                <li class="list-group-item list-group-item-light">Calendars</li>
-                <li class="list-group-item list-group-item-light">etc</li>
-              </ul>
-            </p>
-          </div>
-        </div>
-        <div class="col-md-8">
-          <div class="content-section-bottom">
-            {% block bottom %}{% endblock %}
-            <p class='text-muted'>
-
-            </p>
-          </div>
-        </div>
       </div>
+     <div class="col-md-8">
+     <div class="content-section-bottom">
+        {% block bottom %}{% endblock %}
+        <p class='text-muted'>
+
+        </p>
+      </div>
+    </div>
     </main>
 
 

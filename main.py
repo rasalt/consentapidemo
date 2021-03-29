@@ -25,7 +25,7 @@ from google.auth import app_engine
 from google.auth.transport import requests
 
 from flask import Flask, render_template, url_for, redirect, flash, session
-from forms import LoginForm, ConsentForm, DataRequestForm
+from forms import LoginForm, ConsentForm, DataRequestByEntityForm, DataRequestByPurposeForm
 import flask
 app = Flask(__name__)
 app.config['SECRET_KEY'] = '343sfre'
@@ -72,8 +72,22 @@ consentList = [
     "Allow identifiable data to be shared for discount programs?", #13
     "Allow identifiable data to be shared for coaching recommendations?" #14
    ]
-
+consentquestions = {
+    "part1":
+        [
+            {"activity":  ["healthplan","provider", "partners"]},
+            {"vitals": ["healthplan","provider", "partners"]},
+            {"mentalhealth": ["healthplan","provider", "partners"]},
+            {"medicalrecord": ["healthplan","provider", "partners"]}
+        ],
+    "part2":
+        [
+            {"identifiable": ["research", "discount", "coaching"]},
+            {"de-identified": ["research", "discount", "coaching"]}
+        ],
+    }
 @app.route("/consent", methods=['GET','POST'])
+
 def consent():
     userconsentdata = ({})
     userconsentdata["activity"] = {}
@@ -82,6 +96,107 @@ def consent():
     userconsentdata["mentalhealth"] = {}
     userconsentdata["de-identified"] = {}
     userconsentdata["identifiable"] = {}
+
+    userconsentdata["activity"]["provider"] = False
+    userconsentdata["activity"]["healthplan"] = False
+    userconsentdata["activity"]["partners"] = False
+
+    userconsentdata["vitals"]["provider"] = False
+    userconsentdata["vitals"]["healthplan"] = False
+    userconsentdata["vitals"]["partners"] = False
+
+    userconsentdata["medicalrecord"]["provider"] = False
+    userconsentdata["medicalrecord"]["healthplan"] = False
+    userconsentdata["medicalrecord"]["partners"] = False
+
+    userconsentdata["mentalhealth"]["provider"] = False
+    userconsentdata["mentalhealth"]["healthplan"] = False
+    userconsentdata["mentalhealth"]["partners"] = False
+
+    userconsentdata["de-identified"]["research"] = False
+    userconsentdata["identifiable"]["research"] = False
+
+    userconsentdata["de-identified"]["discount"] = False
+    userconsentdata["identifiable"]["discount"] = False
+
+    userconsentdata["de-identified"]["coaching"] = False
+    userconsentdata["identifiable"]["coaching"] = False
+
+    #    form = ConsentForm()
+#    if form.validate_on_submit():
+#        flash(f'Your consent has been noted and we will send you a copy of this information for your records', 'success')
+    if (flask.request.method =='POST'):
+        print("POST")
+        textToDisplay = "Your Consent Summary - " + "<br/>" + "<br/>" + "<br/>"
+
+        activity_list = flask.request.form.getlist("vitals")
+        print(activity_list)
+        if activity_list:
+            for i in activity_list:
+                userconsentdata["activity"][i] = True
+                textToDisplay = textToDisplay + "Vitals data consented to share with " + i + "<br/>" + "<br/>" + "<br/>"
+        print("******")
+
+        vitals_list = flask.request.form.getlist("vitals")
+        print(vitals_list)
+        if vitals_list:
+            for i in vitals_list:
+                userconsentdata["vitals"][i] = True
+                textToDisplay = textToDisplay + "Vitals data consented to share with " + i + "<br/>" + "<br/>" + "<br/>"
+        print("******")
+
+        mr_list = flask.request.form.getlist("medicalrecord")
+        print(mr_list)
+        if mr_list:
+            for i in mr_list:
+                userconsentdata["medicalrecord"][i] = True
+                textToDisplay = textToDisplay + "Medicalrecord data consented to share with " + i + "<br/>" + "<br/>" + "<br/>"
+        print("******")
+
+        m_list = flask.request.form.getlist("mentalhealth")
+        print(m_list)
+        if m_list:
+            for i in m_list:
+                userconsentdata["mentalhealth"][i] = True
+                textToDisplay = textToDisplay + "Mentalhealth data consented to share with " + i + "<br/>" + "<br/>" + "<br/>"
+        print("******")
+
+        i_list = flask.request.form.getlist("identifiable")
+        print(i_list)
+        if i_list:
+            for i in i_list:
+                userconsentdata["identifiable"][i] = True
+                textToDisplay = textToDisplay + "Identifiable data consented to share with " + i + "<br/>" + "<br/>" + "<br/>"
+        print("******")
+
+        d_list = flask.request.form.getlist("de-identified")
+        print(d_list)
+        if d_list:
+            for i in d_list:
+                userconsentdata["de-identified"][i] = True
+                textToDisplay = textToDisplay + "De-identified data consented to share with " + i + "<br/>" + "<br/>" + "<br/>"
+        print("******")
+
+        print(userconsentdata)
+        updateConsentData(session['user'], userconsentdata)
+
+
+        return(textToDisplay)
+
+#        return redirect(url_for('consentAck'))
+    if (flask.request.method =='GET'):
+        return render_template('consent.html', title='consent', questions=consentquestions)
+
+@app.route("/consentold", methods=['GET','POST'])
+def consentold():
+    userconsentdata = ({})
+    userconsentdata["activity"] = {}
+    userconsentdata["vitals"] = {}
+    userconsentdata["medicalrecord"] = {}
+    userconsentdata["mentalhealth"] = {}
+    userconsentdata["de-identified"] = {}
+    userconsentdata["identifiable"] = {}
+
     form = ConsentForm()
 #    if form.validate_on_submit():
 #        flash(f'Your consent has been noted and we will send you a copy of this information for your records', 'success')
@@ -184,17 +299,11 @@ def consent():
         return(textToDisplay)
 #        return redirect(url_for('consentAck'))
     return render_template('consent.html', title='consent', form=form)
+@app.route("/datarequestbypurpose", methods=['GET','POST'])
+def datarequestbypurpose():
 
-@app.route("/datarequestAll", methods=['GET','POST'])
-def datarequestAll():
-
-    form = DataRequestForm()
-    print("fsfndfsk")
+    form = DataRequestByPurposeForm()
     if (flask.request.method =='POST'):
-        print("POST")
-        print("45464")
-
-        textToDisplay = "Request for data by a " + form.who.data + ". For the purpose of " + form.whatid.data + ". Requesting Organization is " + form.requestingName.data + "<br/>"+ "<br/>"+ "<br/> "
 
         # Lets get all the data that this user can access
         mappingarray = []
@@ -206,15 +315,11 @@ def datarequestAll():
 
         if (form.whatid.data != "any"):
             data['resource_attributes']['data_identifiable'] = form.whatid.data
-        if (form.whattype.data != "any"):
-            data['resource_attributes']['data_type'] = form.whattype.data
 
         data['request_attributes'] = {}
 
-        if (form.who.data != "any"):
-            data['request_attributes']['requester_type'] = form.who.data
         if (form.purpose.data != "any"):
-            data['request_attributes']['requester_identity'] = form.purpose.data
+            data['request_attributes']['purpose'] = form.purpose.data
 
 
         print(data)
@@ -233,7 +338,51 @@ def datarequestAll():
         #session["mappingarray"]= [{"value": "A", "phys": "PHYS"}, {"value": "B", "phys": "PHYS"}]
         return render_template('dataresult.html', data=session['mappingarray'])
     #        return redirect(url_for('consentAck'))
-    return render_template('datarequestAll.html', title='datarequest', form=form)
+    return render_template('datarequestbypurpose.html', title='datarequestbypurpose', form=form)
+
+
+@app.route("/datarequestbyentity", methods=['GET','POST'])
+def datarequestbyentity():
+
+    form = DataRequestByEntityForm()
+    if (flask.request.method =='POST'):
+        print("POST")
+        print("45464")
+
+        textToDisplay = "Requester " + form.who.data + "for data type " + form.whattype.data
+        # Lets get all the data that this user can access
+        mappingarray = []
+        data = {}
+
+        data['gcs_destination'] = {}
+        data['gcs_destination']['uri_prefix'] = 'gs://smede-sandbox/consent/xyz'
+        data['resource_attributes'] = {}
+
+        if (form.whattype.data != "any"):
+            data['resource_attributes']['data_type'] = form.whattype.data
+
+        data['request_attributes'] = {}
+
+        if (form.who.data != "any"):
+            data['request_attributes']['requester_type'] = form.who.data
+
+        print(data)
+        request = svc.projects().locations().datasets().consentStores().queryAccessibleData(
+            consentStore = consent_parent, body=data)
+        response = request.execute()
+        print (response)
+        print ("------------------------------------------")
+        # Read the destination output file
+        session['mappingarray'] = getMapping()
+        print(session)
+        print("REDIRECTING NOW")
+        #return(mappingarray)
+      #  return redirect(url_for('resultall'))
+        print(session['mappingarray'])
+        #session["mappingarray"]= [{"value": "A", "phys": "PHYS"}, {"value": "B", "phys": "PHYS"}]
+        return render_template('dataresult.html', data=session['mappingarray'])
+    #        return redirect(url_for('consentAck'))
+    return render_template('datarequestbyentity.html', title='datarequestbyentity', form=form)
 
 
 def download_blob(bucket_name, source_blob_name, destination_file_name):
@@ -450,6 +599,16 @@ def createDataMapping(logicalid):
 
 
 import json
+
+def run_request(request):
+    response = request.execute()
+    print(json.dumps(
+      response,
+      sort_keys=True,
+      indent=2
+    ))
+    return response
+
 #@app.route("/")
 def updateConsentData(useremail, userconsentdata):
 
@@ -505,7 +664,6 @@ def updateConsentData(useremail, userconsentdata):
 
         # userDataMapping
         for a in ["activity", "vitals", "mentalhealth", "medicalrecord"]:
-
             # Create the userDataMapping
             # Use opaque id and expect another application to take care of transalting the opaqueid to physical resource location
             # the format of the opaque id is "useremail,"noun(activity/Vitals),physresource(bq/csv/fhir),id(table/csv
@@ -513,62 +671,62 @@ def updateConsentData(useremail, userconsentdata):
             # Create 2 version per data type
             ## Deidentified Data ID
             data = {}
-            attr = {}
-            data["user_id"] = useremail
-            data["data_id"] = useremail +  "," + a + "," + "deid"
+            attr1 = {}
+            attr2 = {}
             data["resource_attributes"] = []
-            attr["attribute_definition_id"] = "data_identifiable"
-            attr["values"] = ["de-identified"]
-            data["resource_attributes"].append(attr)
-            print("Creating user data mapping for user {} datatype {} and de-id".format(useremail,a))
-            print(json.dumps(data, indent=4))
-            request = svc.projects().locations().datasets().consentStores().userDataMappings().create(
-                parent=consent_parent,body=data)
 
-            response = request.execute()
-            print(json.dumps(
-              response,
-              sort_keys=True,
-              indent=2
-            ))
+            data["user_id"] = username
+            data["data_id"] = username + "," + a + "," + "deid"
+            attr1["attribute_definition_id"] = "data_identifiable"
+            attr1["values"] = ["de-identified"]
+            data["resource_attributes"].append(attr1)
+
+            attr2["attribute_definition_id"] = "data_type"
+            attr2["values"] = [a]
+            data["resource_attributes"].append(attr2)
+
+            print("Creating user data mapping for user {} datatype {} and de-id".format(username, a))
+            request = svc.projects().locations().datasets().consentStores().userDataMappings().create(
+                parent=consent_parent, body=data)
+            run_request(request)
             createDataMapping(data["data_id"])
 
             ## Identifiable Data ID
             data = {}
-            attr = {}
-            data["user_id"] = useremail
-            data["data_id"] = useremail +  "," + a + "," + "id"
+            attr1 = {}
+            attr2 = {}
+            data["user_id"] = username
+            data["data_id"] = username + "," + a + "," + "id"
             data["resource_attributes"] = []
-            attr["attribute_definition_id"] = "data_identifiable"
-            attr["values"] = ["identifiable"]
-            data["resource_attributes"].append(attr)
-            print("Creating user data mapping for datatype {} and id".format(a))
-            print(json.dumps(data, indent=4))
-            request = svc.projects().locations().datasets().consentStores().userDataMappings().create(
-                parent=consent_parent,body=data)
+            attr1["attribute_definition_id"] = "data_identifiable"
+            attr1["values"] = ["identifiable"]
+            data["resource_attributes"].append(attr1)
 
-            response = request.execute()
-            print(json.dumps(
-              response,
-              sort_keys=True,
-              indent=2
-            ))
+            attr2["attribute_definition_id"] = "data_type"
+            attr2["values"] = [a]
+            data["resource_attributes"].append(attr2)
+            print("Creating user data mapping for datatype {} and id".format(a))
+            request = svc.projects().locations().datasets().consentStores().userDataMappings().create(
+                parent=consent_parent, body=data)
+            run_request(request)
             createDataMapping(data["data_id"])
 
     # Existing user
     #Consent Creating
     print("Existing User ")
 
-    for a in ["activity", "vitals", "mentalhealth", "medicalrecord"]:
+    # Create consent itself
+    data = {}
+    data["user_id"] = useremail
+    data["policies"] = []
+    data["consent_artifact"] = artifact
 
-        data = {}
+    for a in ["activity", "vitals", "mentalhealth", "medicalrecord"]:
         activityBy = []
         for b in ["provider", "healthplan", "partners"]:
             if userconsentdata[a][b] == True:
                 activityBy.append(b)
 
-        data["user_id"] = useremail
-        data["policies"] = []
         obj0 = {}
         obj0["resource_attributes"] = []
         obj = {}
@@ -580,93 +738,67 @@ def updateConsentData(useremail, userconsentdata):
         obj0["authorization_rule"]["expression"] = "requester_type in {}".format(str(activityBy))
         data["policies"].append(obj0)
 
-        data["consent_artifact"]= artifact
+    print(data)
+    print("------------------------")
 
-        print(json.dumps(data, indent=4))
-        request = svc.projects().locations().datasets().consentStores().consents().create(
-            parent=consent_parent,body=data)
+    print("Adding policies for identifiable data {}".format(useremail))
 
-        response = request.execute()
-        print(json.dumps(
-          response,
-          sort_keys=True,
-          indent=2
-         ))
-        print("------------------------")
+    # Create the payload
+    accessBy = []
+    if (userconsentdata["identifiable"]["discount"] == True):
+        accessBy.append("discount")
+    if (userconsentdata["identifiable"]["coaching"] == True):
+        accessBy.append("coaching")
 
-        print("Create Consent  for idenitifable  data  {}".format(useremail))
+    obj0 = {}
+    obj0['resource_attributes'] = []
+    obj = {}
+    obj['attribute_definition_id'] = 'data_identifiable'
+    obj['values'] = []
+    obj['values'].append('identifiable')
+    obj0['resource_attributes'].append(obj)
+    obj0['authorization_rule'] = {}
+    obj0['authorization_rule']['expression'] = 'purpose in {}'.format(str(accessBy))
 
-        data = {}
-        #Create the payload
-        accessBy = []
-        if (userconsentdata["identifiable"]["discount"] == True):
-            accessBy.append("discount")
-        if (userconsentdata["identifiable"]["coaching"] == True):
-            accessBy.append("coaching")
-        data['user_id'] = useremail
-        data['policies'] = []
-        obj0 = {}
-        obj0['resource_attributes'] = []
-        obj = {}
-        obj['attribute_definition_id'] = 'data_identifiable'
-        obj['values'] = []
-        obj['values'].append('identifiable')
-        obj0['resource_attributes'].append(obj)
-        obj0['authorization_rule'] = {}
-        obj0['authorization_rule']['expression'] = 'requester_identity in {}'.format(str(accessBy))
-        data['policies'].append(obj0)
+    data['policies'].append(obj0)
+    print(data)
+    print("------------------------")
 
-        data['consent_artifact']= artifact
+    print("Adding policies for de-identified  data  {}".format(useremail))
+    accessBy = []
+    if (userconsentdata["de-identified"]["research"] == True):
+        accessBy.append("research")
 
-        print(json.dumps(data, indent=4))
-        request = svc.projects().locations().datasets().consentStores().consents().create(
-            parent=consent_parent,body=data)
+    obj0 = {}
+    obj0['resource_attributes'] = []
+    obj = {}
+    obj['attribute_definition_id'] = 'data_identifiable'
+    obj['values'] = []
+    obj['values'].append('de-identified')
+    obj0['resource_attributes'].append(obj)
+    obj0['authorization_rule'] = {}
+    obj0['authorization_rule']['expression'] = 'purpose in {}'.format(str(accessBy))
 
-        response = request.execute()
-        print(json.dumps(
-          response,
-          sort_keys=True,
-          indent=2
-        ))
-        print("------------------------")
+    data['policies'].append(obj0)
+    print(data)
+    print("------------------------")
 
-        print("Create Consent  for de-identified  data  {}".format(useremail))
+    request = svc.projects().locations().datasets().consentStores().consents().create(
+        parent=consent_parent, body=data)
 
-        data = {}
-        #Create the payload
-        accessBy = []
-        if (userconsentdata["de-identified"]["research"] == True):
-            accessBy.append("research")
-
-        data['user_id'] = useremail
-        data['policies'] = []
-        obj0 = {}
-        obj0['resource_attributes'] = []
-        obj = {}
-        obj['attribute_definition_id'] = 'data_identifiable'
-        obj['values'] = []
-        obj['values'].append('de-identified')
-        obj0['resource_attributes'].append(obj)
-        obj0['authorization_rule'] = {}
-        obj0['authorization_rule']['expression'] = 'requester_identity in {}'.format(str(accessBy))
-        data['policies'].append(obj0)
-
-        data['consent_artifact']= artifact
-
-        print(json.dumps(data, indent=4))
-        request = svc.projects().locations().datasets().consentStores().consents().create(
-            parent=consent_parent,body=data)
-
-        response = request.execute()
-        print(json.dumps(
-          response,
-          sort_keys=True,
-          indent=2
-        ))
-        print("------------------------")
+    run_request(request)
     return  
 
-
+@app.route("/test")
+def movies_page():
+    if (flask.request.method =='GET'):
+        movies = [(1, {"title":"ghost","year": "1972"}), (2, {"title":"Crazy Girl","year":"1934"})]
+        return render_template("movies.html", movies=sorted(movies))
+    else:
+        form_movie_keys = request.form.getlist("movie_keys")
+        for form_movie_key in form_movie_keys:
+            db.delete_movie(int(form_movie_key))
+        return redirect(url_for("test"))
 
 if __name__ == '__main__':
     setup_consentservice()

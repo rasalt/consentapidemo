@@ -13,7 +13,7 @@
 </head>
 <body>
     <header class="site-header">
-      <nav class="navbar navbar-expand-md navbar-dark bg-steel fixed-top">
+      <nav class="navbar navbar-expand-md navbar-dark bg-primary fixed-top">
         <div class="container">
           <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarToggle" aria-controls="navbarToggle" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
@@ -52,11 +52,9 @@
         </div>
         <div class="col-md-8">
           <div class="content-section-bottom">
-            <h2>This is what is happening</h2>
+            {% block bottom %}{% endblock %}
             <p class='text-muted'>
-              <ul class="list-group">
-                <li class="list-group-item list-group-item-light">sdfdsfs</li>
-              </ul>
+
             </p>
           </div>
         </div>

@@ -32,3 +32,19 @@
             </fieldset>
     </div>
 {% endblock content %}
+{% block bottom %}
+<div class="form-group"><h5>
+    1. Requesting entity makes a request with the attributes specified. <br>
+	2. Once the request is submiied the following things happen <br>
+	<h6>
+		2.1 Using the request attributes, a query is formulated by the policy enforcement app <br>
+		2.2 The consent store is queried for what patient data consent selections match the query <br>
+		2.3 In this demo implementation, additional mapping is created between the LogicalID for the data to the
+        physical location of the data. <br>
+		2.4 Envision the policy enforcement app then pulling these various pieces of information and sending it to the requester in a secure fashion
+        <br>
+	</h6>
+</h5>
+
+</div>
+{% endblock bottom %}

@@ -1,60 +1,73 @@
-{% extends "layout.html" %}
-{% block content %}
+{% extends "layout_consent.html" %}
     <div class="content-section">
         <form method="POST" action="">
             {{ form.hidden_tag() }}
             <fieldset class="form-group">
 				<legend class="border-bottom mb-4"><h2>Healthcare Patient Facing App</h2></legend>
                 <div class="form-group"> <h4>Consent Collection</h4> <br>
-                    {{ form.consent0.label(class="form-control-label") }}
-		    {{ form.consent0(class="form-control form-control-lg") }}
-                    
-		    {{ form.consent1.label(class="form-control-label") }}
-		    {{ form.consent1(class="form-control form-control-lg") }}
-                    
-		    {{ form.consent2.label(class="form-control-label") }}
-		    {{ form.consent2(class="form-control form-control-lg") }}
-                    
-		    {{ form.consent3.label(class="form-control-label") }}
-		    {{ form.consent3(class="form-control form-control-lg") }}
-                    
-		    {{ form.consent4.label(class="form-control-label") }}
-		    {{ form.consent4(class="form-control form-control-lg") }}
-                    
-		    {{ form.consent5.label(class="form-control-label") }}
-		    {{ form.consent5(class="form-control form-control-lg") }}
-                    
-		    {{ form.consent6.label(class="form-control-label") }}
-		    {{ form.consent6(class="form-control form-control-lg") }}
-                    
-		    {{ form.consent7.label(class="form-control-label") }}
-		    {{ form.consent7(class="form-control form-control-lg") }}
-                    
-		    {{ form.consent8.label(class="form-control-label") }}
-		    {{ form.consent8(class="form-control form-control-lg") }}
-                    
-		    {{ form.consent9.label(class="form-control-label") }}
-		    {{ form.consent9(class="form-control form-control-lg") }}
-                    
-		    {{ form.consent10.label(class="form-control-label") }}
-		    {{ form.consent10(class="form-control form-control-lg") }}
-                    
-		    {{ form.consent11.label(class="form-control-label") }}
-		    {{ form.consent11(class="form-control form-control-lg") }}
-                    
-		    {{ form.consent12.label(class="form-control-label") }}
-		    {{ form.consent12(class="form-control form-control-lg") }}
-                    
-		    {{ form.consent13.label(class="form-control-label") }}
-		    {{ form.consent13(class="form-control form-control-lg") }}
-                    
-		    {{ form.consent14.label(class="form-control-label") }}
-		    {{ form.consent14(class="form-control form-control-lg") }}
-                </div>
-            </fieldset>
-            <div class="form-group">
-                {{ form.submit(class="btn btn-outline-info") }}
-            </div>
-        </form>
-    </div>
-{% endblock content %}
+
+{% block title %}Consent Collection{% endblock %}
+{% block content %}
+    <h1 class="title">Consent Collection</h1>
+    <h6> Please submit your consent wrt the various types of data listed. Eg. Checking a box indicates your
+         consent to share the respective categroy of data with the entity described. eg If you check "partners for
+    medical records" then it means you consent to share data type of "medical records" with "partners/third parties"
+    <br>
+
+    </h6>
+
+    {% if questions %}
+    <form action="" method="post" name="consent_list">
+        {% for row in questions.part1 %}
+          {% for key in row %}
+             <br> <h5>{{ key }} </h5>
+
+            {% for item in row[key] %}
+            <tr>
+              <td>
+                <label class="checkbox">
+                  <input type="checkbox" name="{{ key }}" value="{{ item }}"/>
+                </label>
+              <h7>{{ item }} </h7> <br>
+
+              </td>
+            </tr>
+            {% endfor %}
+          {% endfor %}
+        {% endfor %}
+
+        {% for row in questions.part2 %}
+          {% for key in row %}
+            <br> <h5>{{ key }} </h5>
+
+            {% for item in row[key] %}
+            <tr>
+              <td>
+                <label class="checkbox">
+                  <input type="checkbox" name="{{ key }}" value="{{ item }}"/>
+                </label>
+              <h7>{{ item }} </h7> <br>
+
+              </td>
+            </tr>
+            {% endfor %}
+          {% endfor %}
+        {% endfor %}
+      <div class="field is-grouped">
+        <div class="control">
+          <button class="button is-danger is-small">Submit Consent</button>
+        </div>
+      </div>
+    </form>
+    {% endif %}
+{% endblock %}
+{% block bottom %}
+<div><h5>
+    1. Artifact stored in Consent Store: "Artifact" to prove patient opt-in choises  <br>
+    2. User Data Mapping: A "mapping" of the various data types for a patient is created and stored in the Consent Store. The items could be mapped
+       to a logical id or a physical resource path. In this demo it is mapped to an opaque id. <br>
+    3. Consent Creation: Finally a consent is created associated with the opt-in choices of the patient and written to the Consent Store.
+</h5>
+
+</div>
+{% endblock bottom %}
